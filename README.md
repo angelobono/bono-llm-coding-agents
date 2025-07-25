@@ -3,7 +3,7 @@
 **PHP LLM Coding Agents**  
 Automated multi-agent architecture for code generation, analysis, and orchestration with support for various AI providers.
 
-Find more details in the [documentation](docs/html/index.html).
+Find more details in the [HTML-documentation](https://angelobono.github.io/bono-llm-coding-agents/).
 
 ## Features
 

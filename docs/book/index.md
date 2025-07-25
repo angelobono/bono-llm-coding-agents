@@ -3,8 +3,6 @@
 **PHP LLM Coding Agents**  
 Automated multi-agent architecture for code generation, analysis, and orchestration with support for various AI providers.
 
-Find more details in the [html-documentation](docs/html/index.html).
-
 ## Features
 
 - Multi-agent architecture (Architect, Coder, Orchestrator)

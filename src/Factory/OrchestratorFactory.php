@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bono\Factory;
 
-use Bono\Orchestrator;
+use Bono\Agent\Orchestrator;
 
 /**
  * OrchestratorFactory

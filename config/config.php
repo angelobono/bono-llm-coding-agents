@@ -1,24 +1,32 @@
 <?php
 
+use Bono\Config\Env;
+use Monolog\Level;
+use Bono\Agent\CoderAgent;
+use Psr\Log\LoggerInterface;
+use Bono\Agent\ArchitectAgent;
 use Bono\Provider\OllamaProvider;
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+Env::initialize();
 
 return [
-    'OllamaProvider' => [
-        'url' => getenv('OLLAMA_URL') ?: 'http://localhost:11434/api',
+    LoggerInterface::class => [
+        getenv('LOG_PATH') ?: __DIR__ . '/../logs/app.log',
+        getenv('LOG_LEVEL') ?: Level::Info,
     ],
-    'ArchitectAgent' => [
-        'ollamaProvider' => OllamaProvider::class,
-        'analysisModel' => 'llama3.2:3b',
-        'generationModel' => 'llama3.2:3b',
+    OllamaProvider::class  => [
+        getenv('OLLAMA_URL') ?: 'http://localhost:11434/api',
+    ],
+    ArchitectAgent::class  => [
+        OllamaProvider::class,
+        getenv('ARCHITECT_AGENT_ANALYSIS_MODEL') ?? 'llama3.2:3b',
+        getenv('ARCHITECT_AGENT_GENERATION_MODEL') ?? 'llama3.2:3b',
         /*'tools' => [
             'stable_diffusion' => \Bono\Tool\StableDiffusion::class,
         ],*/
     ],
-    'CoderAgent' => [
-        'ollamaProvider' => OllamaProvider::class,
-        'codingModel' => 'deepseek-coder:6.7b',
+    CoderAgent::class      => [
+        OllamaProvider::class,
+        getenv('CODER_AGENT_CODING_MODEL') ?? 'qwen2.5-coder:3b',
     ],
 ];

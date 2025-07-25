@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f46258020772119a3e61fa44bd9b9089",
+    "content-hash": "1c6751afffe833e195b429eb17464852",
     "packages": [
         {
             "name": "composer/package-versions-deprecated",
@@ -6368,6 +6368,38 @@
             "time": "2024-12-16T12:45:15+00:00"
         },
         {
+            "name": "swoole/ide-helper",
+            "version": "6.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/swoole/ide-helper.git",
+                "reference": "6f12243dce071714c5febe059578d909698f9a52"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/6f12243dce071714c5febe059578d909698f9a52",
+                "reference": "6f12243dce071714c5febe059578d909698f9a52",
+                "shasum": ""
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Team Swoole",
+                    "email": "team@swoole.com"
+                }
+            ],
+            "description": "IDE help files for Swoole.",
+            "support": {
+                "issues": "https://github.com/swoole/ide-helper/issues",
+                "source": "https://github.com/swoole/ide-helper/tree/6.0.2"
+            },
+            "time": "2025-03-23T07:31:41+00:00"
+        },
+        {
             "name": "symfony/console",
             "version": "v6.4.23",
             "source": {
@@ -7512,7 +7544,8 @@
     "platform": {
         "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4",
         "ext-curl": "*",
-        "ext-json": "*"
+        "ext-json": "*",
+        "ext-swoole": "*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"

@@ -7,7 +7,7 @@ use Bono\Factory\ArchitectAgentFactory;
 
 $config = require __DIR__ . '/config.php';
 
-$provider = new OllamaProvider($config['OllamaProvider']['url']);
+$provider = new OllamaProvider(...$config[OllamaProvider::class]);
 
 $appFactory = new OrchestratorFactory(
     new ArchitectAgentFactory($provider),

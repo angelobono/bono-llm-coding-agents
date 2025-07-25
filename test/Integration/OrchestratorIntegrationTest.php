@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Bono\Tests\Integration;
 
 use Bono\Cache\FileCache;
-use Bono\Cache\CachingDecorator;
-use Bono\Factory\ArchitectAgentFactory;
-use Bono\Factory\CoderAgentFactory;
-use Bono\Orchestrator;
-use Bono\Provider\OllamaProvider;
-use Bono\Tests\Mock\StableDiffusionMock;
-use PHPUnit\Framework\Attributes\Test;
+use Bono\Agent\Orchestrator;
 use PHPUnit\Framework\TestCase;
+use Bono\Cache\CachingDecorator;
+use Bono\Provider\OllamaProvider;
+use Bono\Factory\CoderAgentFactory;
+use PHPUnit\Framework\Attributes\Test;
+use Bono\Factory\ArchitectAgentFactory;
+use Bono\Tests\Mock\StableDiffusionMock;
 
-use function array_keys;
 use function implode;
+use function array_keys;
 
 /**
  * Multi-Agent Integration Test
@@ -32,11 +32,24 @@ class OrchestratorIntegrationTest extends TestCase
         // Orchestrator initialisieren
         $orchestrator = $this->getOrchestrator();
 
-        // 5) Test-UserStory
-        $userStory = 'As a doctor, I want a dashboard with patient records.';
+        // Task ausführen
+        $result = $orchestrator->processTask(<<<USER_STORY
+As a doctor, I want a dashboard with patient records.
+            
+Acceptance criteria
+- The API provides an endpoint to list patient records with key information (GET /api/patients returns name, ID, diagnosis).
+- The API supports searching and filtering patient records by name or ID via query parameters (GET /api/patients?name=...&id=...).
+- The API provides an endpoint to retrieve detailed information for a single patient (GET /api/patients/{id}).
+- Access to all patient endpoints requires authentication (e.g., JWT token).
+- The API responses are structured in JSON and support clients on desktop and tablet.
 
-        // 6) Task ausführen
-        $result = $orchestrator->processTask($userStory);
+Not acceptance criteria
+- The API does not provide endpoints to edit or delete patient records (PUT, DELETE are not available).
+- The API does not provide endpoints for analytics or statistics.
+- The API does not provide endpoints to export patient data (e.g., no CSV/PDF export).
+- The API does not send notifications for new records.
+- The API does not connect or synchronize with external hospital systems.
+USER_STORY);
 
         // 7) Assertions
         $this->assertTaskResultIsValid($result);

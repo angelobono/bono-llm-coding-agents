@@ -1,7 +1,8 @@
 # LLM Coding Agents and Orchestration for PHP
-  
+
 Automated multi-agent architecture for code generation, analysis, and orchestration.
-It can support various AI providers with custom implementation, the default is using an OllamaProvider. 
+It can support various AI providers with custom implementation, the default is using an
+OllamaProvider.
 This project is in an experimental state, but already usable.
 
 Find more details in the [HTML-documentation](https://angelobono.github.io/bono-llm-coding-agents/).
@@ -16,13 +17,19 @@ Find more details in the [HTML-documentation](https://angelobono.github.io/bono-
 - Compatible with PHP 8\.2\+
 - Generated files will be linted
 - Generates generic type annotations for PHP 8\.1\+
+- Parallel task processing with `swoole` / `openswoole` extension
 
 ## Installation
 
 You need am AI Provider to run this project, the default is Ollama.
 You can find more information about Ollama [here](https://ollama.com/)
 or in the [HTML-documentation](https://angelobono.github.io/bono-llm-coding-agents/).
-## Quick example
+
+## Quick examples
+
+Note: The default prompts are configured to generate REST-APIs.
+
+### Simple user story
 
 ```php
 <?php
@@ -53,9 +60,57 @@ Generated files:
                 📄 DashboardView.php
 ```
 
+### Detailed user story
+
+```php
+<?php
+
+declare(strict_types=1);
+
+$app = require 'config/app.php';
+$app->processTask(<<<USER_STORY
+As a doctor, I want a dashboard with patient records.
+            
+Acceptance criteria
+- The API provides an endpoint to list patient records with key information (GET /api/patients returns name, ID, diagnosis).
+- The API supports searching and filtering patient records by name or ID via query parameters (GET /api/patients?name=...&id=...).
+- The API provides an endpoint to retrieve detailed information for a single patient (GET /api/patients/{id}).
+- Access to all patient endpoints requires authentication (e.g., JWT token).
+- The API responses are structured in JSON and support clients on desktop and tablet.
+
+Not acceptance criteria
+- The API does not provide endpoints to edit or delete patient records (PUT, DELETE are not available).
+- The API does not provide endpoints for analytics or statistics.
+- The API does not provide endpoints to export patient data (e.g., no CSV/PDF export).
+- The API does not send notifications for new records.
+- The API does not connect or synchronize with external hospital systems.
+USER_STORY);
+```
+
+Generated files:
+
+```php
+📂 d7b5e56758d02ddde13307b955372e66/
+    📄 composer.json
+    🗂️ src/
+        📂 App/
+            🎮 Controller/
+                📄 DashboardController.php
+            🗃️ Database/
+                📄 DatabaseConnection.php
+            📂 Entity/
+                📄 Patient.php
+                📄 PatientRecord.php
+            🔧 Service/
+                📄 AuthService.php
+            🖼️ View/
+                📄 DashboardView.php
+```
+
 ## Known Issues
 
-- Ollama sometimes returns empty responses, which can lead to errors in the agent workflow. The workflow will retry automatically, but this can cause longer execution times.
+- Ollama sometimes returns empty responses, which can lead to errors in the agent workflow. The
+  workflow will retry automatically, but this can cause longer execution times.
 
 ## Contributing
 
@@ -68,7 +123,8 @@ Please follow these steps:
 4. Push to your fork (`git push origin feature/your-feature`)
 5. Create a pull request
 
-Please follow the [PSR\-12 Coding Standard](https://www.php-fig.org/psr/psr-12/) and run static analysis before your PR:
+Please follow the [PSR\-12 Coding Standard](https://www.php-fig.org/psr/psr-12/) and run static
+analysis before your PR:
 
 ```bash
 composer analyse

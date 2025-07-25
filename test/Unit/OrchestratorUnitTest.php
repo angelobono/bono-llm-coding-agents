@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Bono\Tests\Unit;
 
-use Bono\Factory\ArchitectAgentFactory;
-use Bono\Factory\CoderAgentFactory;
-use Bono\Orchestrator;
-use Bono\Tests\Mock\LlmProviderInterfaceMock;
-use Bono\Tests\Mock\StableDiffusionMock;
-use PHPUnit\Framework\Attributes\Test;
+use Bono\Agent\Orchestrator;
 use PHPUnit\Framework\TestCase;
+use Bono\Factory\CoderAgentFactory;
+use PHPUnit\Framework\Attributes\Test;
+use Bono\Factory\ArchitectAgentFactory;
+use Bono\Tests\Mock\StableDiffusionMock;
+use Bono\Tests\Mock\LlmProviderInterfaceMock;
 
 use function json_encode;
 

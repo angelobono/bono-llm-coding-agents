@@ -7,13 +7,7 @@
 
 declare(strict_types=1);
 
-use Bono\Factory\ArchitectAgentFactory;
-use Bono\Factory\CoderAgentFactory;
-use Bono\Orchestrator;
-use Bono\Provider\OllamaProvider;
-
-use function array_keys;
-use function implode;
+use Bono\Agent\Orchestrator;use Bono\Provider\OllamaProvider;use Bono\Factory\CoderAgentFactory;use Bono\Factory\ArchitectAgentFactory;
 
 // 1) REAL provider → uses your local Ollama
 $ollama = new OllamaProvider('http://localhost:11434/api');

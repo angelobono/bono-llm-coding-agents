@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bono\Agent;
 
+use Exception;
 use Bono\Data\UserStoryAnalysis;
 use Bono\Factory\LoggerFactory;
 use Bono\Parser\LlmResponseParser;
@@ -21,21 +22,37 @@ use const JSON_PRETTY_PRINT;
 
 /**
  * ArchitectAgent
- *
  * This agent analyzes user stories and creates implementation plans.
  * It uses a language model to extract requirements, entities, and actions,
  * and then generates a file structure based on the analysis.
  */
-class ArchitectAgent implements LoggerAwareInterface
+final class ArchitectAgent implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
+    /**
+     * Retry logic to handle empty responses from the LLM.
+     * This is a static property to keep track of retries across multiple calls.
+     *
+     * @var array<string, int>
+     */
+    private static array $retryCount = [];
+
+    /**
+     * Maximum number of retries for empty responses.
+     * This is a static property to limit the number of retries across multiple
+     * calls.
+     *
+     * @var int
+     */
+    private static int $maxRetries = 3;
+
     public function __construct(
-        private LlmProviderInterface $provider,
+        private readonly LlmProviderInterface $provider,
         private readonly string $analysisModel = 'llama3.2:3b',
         private readonly string $planningModel = 'llama3.2:3b'
     ) {
-        if (! $this->logger) {
+        if (!$this->logger) {
             $this->logger = (new LoggerFactory(self::class))->__invoke();
         }
     }
@@ -43,7 +60,7 @@ class ArchitectAgent implements LoggerAwareInterface
     public function analyseUserStory(string $userStory): UserStoryAnalysis
     {
         $analysis = new UserStoryAnalysis($userStory);
-        $prompt   = <<<PROMPT
+        $prompt = <<<PROMPT
 Du bist ein Software-Architekt. Beschreibe entities und actions als OpenAPI-Objekte.
 Verwende nur Englisch. Analysiere folgende User Story und extrahiere:
 - requirements
@@ -73,6 +90,15 @@ Antworte im JSON-Format:
 
 User Story:
 {$userStory}
+
+Important rules:
+- Use OpenAPI objects for entities and actions.
+- Always include concrete field names and data types for all relevant entities.
+- Use basic data models and with relevant properties and refences that are 
+needed to cover the user story.
+- Only create files that are necessary to implement the user story.
+- Only create REST APIs that are necessary to implement the user story
+- No templates, no boilerplate code or html rendering.
 PROMPT;
 
         $response = $this->provider->generateStreamResult($prompt, [
@@ -80,34 +106,73 @@ PROMPT;
             'temperature' => 0.1,
         ]);
 
-        $decoded = LlmResponseParser::parseJson($response);
+        if (empty($response)) {
+            if (!isset(static::$retryCount[md5($userStory)])) {
+                static::$retryCount[md5($userStory)] = 0;
+            }
+            static::$retryCount[md5($userStory)]++;
 
+            if (static::$retryCount[md5($userStory)] > static::$maxRetries) {
+                static::$retryCount[md5($userStory)]
+                    = 0; // Reset retry count after max retries
+                throw new Exception(
+                    'Empty response from LLM after multiple retries.'
+                );
+            }
+            $this->logger->warning(
+                '[Architekt-Analyse]: Empty response, retrying in 5 seconds...'
+            );
+            sleep(5);
+            return $this->analyseUserStory($userStory);
+        }
+        if (!isset(static::$retryCount[md5($userStory)])) {
+            static::$retryCount[md5($userStory)] = 0;
+        }
+        $decoded = LlmResponseParser::parseJson($response);
         $this->logger->debug('[Architekt-Analyse]: ', $decoded);
 
-        if (isset($decoded['requirements']) && is_array($decoded['requirements'])) {
-            $analysis->setRequirements(array_map(
-                fn($req) => $req['name'] ?? 'Unbenannt',
+        if (isset($decoded['requirements'])
+            && is_array(
                 $decoded['requirements']
-            ));
+            )
+        ) {
+            $analysis->setRequirements(
+                array_map(
+                    fn($req) => $req['name'] ?? 'Unbenannt',
+                    $decoded['requirements']
+                )
+            );
         }
         if (isset($decoded['entities']) && is_array($decoded['entities'])) {
-            $analysis->setEntities(array_map(
-                fn($ent) => $ent['name'] ?? 'Unbenannt',
-                $decoded['entities']
-            ));
+            $analysis->setEntities(
+                array_map(
+                    fn($ent) => $ent['name'] ?? 'Unbenannt',
+                    $decoded['entities']
+                )
+            );
         }
         if (isset($decoded['actions']) && is_array($decoded['actions'])) {
-            $analysis->setActions(array_map(
-                fn($act) => $act['name'] ?? 'Unbenannt',
-                $decoded['actions']
-            ));
+            $analysis->setActions(
+                array_map(
+                    fn($act) => $act['name'] ?? 'Unbenannt',
+                    $decoded['actions']
+                )
+            );
         }
-        if (isset($decoded['complexity']) && in_array($decoded['complexity'], ['low', 'medium', 'high'])) {
+        if (isset($decoded['complexity'])
+            && in_array(
+                $decoded['complexity'], ['low', 'medium', 'high']
+            )
+        ) {
             $analysis->setComplexity($decoded['complexity']);
         } else {
             $analysis->setComplexity('unknown');
         }
-        if (isset($decoded['architecture']) && is_string($decoded['architecture'])) {
+        if (isset($decoded['architecture'])
+            && is_string(
+                $decoded['architecture']
+            )
+        ) {
             $analysis->setArchitecture($decoded['architecture']);
         } else {
             $analysis->setArchitecture('unknown');
@@ -117,13 +182,16 @@ PROMPT;
 
     public function createImplementationPlan(UserStoryAnalysis $analysis): array
     {
-        $requirements = json_encode($analysis->getRequirements(), JSON_PRETTY_PRINT);
-        $entities     = json_encode($analysis->getEntities(), JSON_PRETTY_PRINT);
-        $actions      = json_encode($analysis->getActions(), JSON_PRETTY_PRINT);
+        $requirements = json_encode(
+            $analysis->getRequirements(), JSON_PRETTY_PRINT
+        );
+        $entities = json_encode($analysis->getEntities(), JSON_PRETTY_PRINT);
+        $actions = json_encode($analysis->getActions(), JSON_PRETTY_PRINT);
 
         $prompt = <<<PROMPT
 Du bist ein Software-Architekt.
 Basierend auf den Requirements plane bitte die nötigen Dateien und deren Zweck.
+
 
 Requirements: {$requirements}
 Entities: {$entities}
@@ -139,6 +207,13 @@ Antworte im JSON-Format:
     {"name": "AuthService.php", "purpose": "Login & Auth"}
   ]
 }
+
+Important rules:
+- Use OpenAPI objects for entities and actions.
+- Always include concrete field names and data types for all relevant entities.
+- Use basic data models and with relevant properties and refences that are 
+needed to cover the user story.
+- Only create REST APIs, no templates, no boilerplate code or html rendering.
 PROMPT;
 
         $response = $this->provider->generateStreamResult($prompt, [
@@ -150,7 +225,7 @@ PROMPT;
 
         $data = LlmResponseParser::parseJson($response);
 
-        if (! isset($data['files']) || ! is_array($data['files'])) {
+        if (!isset($data['files']) || !is_array($data['files'])) {
             $data['files'] = [];
         }
         return [
@@ -200,6 +275,12 @@ Wichtige Regeln:
 - Wenn Methoden im Code fehlen, definiere sie mit Name und Zweck.
 - Falls der Coder unklare Dinge anspricht, triff sinnvolle Annahmen und liefere Defaults.
 - Antworte nur mit JSON, keine Erklärungen oder Kommentare.
+- Use OpenAPI objects for entities and actions.
+- Always include concrete field names and data types for all relevant entities.
+- Use basic data models and with relevant properties and refences that are 
+needed to cover the user story.
+- Only create files that are necessary to implement the user story.
+- Only create REST APIs, no templates, no boilerplate code or html rendering.
 PROMPT;
 
         $response = $this->provider->generateStreamResult($prompt, [
@@ -214,7 +295,7 @@ PROMPT;
         array $fileContents,
         ?UserStoryAnalysis $analysis
     ) {
-        $json   = json_encode($fileContents, JSON_PRETTY_PRINT);
+        $json = json_encode($fileContents, JSON_PRETTY_PRINT);
         $prompt = <<<PROMPT
 Du bist ein Software-Architekt. Analysiere den Code und liefere eine detaillierte Analyse der Architektur, der verwendeten Patterns und der Komplexität.
 Analysiere die folgenden Dateien und liefere eine detaillierte Analyse der Architektur, der verwendeten Patterns und der Komplexität.
@@ -243,7 +324,11 @@ PROMPT;
         if (isset($decoded['architecture'])) {
             $analysis->setArchitecture($decoded['architecture']);
         }
-        if (isset($decoded['complexity']) && in_array($decoded['complexity'], ['low', 'medium', 'high'])) {
+        if (isset($decoded['complexity'])
+            && in_array(
+                $decoded['complexity'], ['low', 'medium', 'high']
+            )
+        ) {
             $analysis->setComplexity($decoded['complexity']);
         } else {
             $analysis->setComplexity('unknown');

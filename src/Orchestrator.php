@@ -394,20 +394,7 @@ keine Kommentare.
   korrekt aufgelistet sind.
 
 PROMPT;
-        $response      = $this->coder->generateCode($prompt, true);
-        /*
-        if ($analysis) {
-            $composerData['extra'] = [
-                'bono_analysis' => [
-                    'requirements' => $analysis->getRequirements(),
-                 \\   'entities' => $analysis->getEntities(),
-                    'actions' => $analysis->getActions(),
-                    'complexity' => $analysis->getComplexity(),
-                    'architecture' => $analysis->getArchitecture()
-                ]
-            ];
-        }
-        */
+        $response = $this->coder->generateCode($prompt, true);
         $result->files['composer.json'] = $targetDir . 'composer.json';
         file_put_contents(
             $targetDir . 'composer.json',

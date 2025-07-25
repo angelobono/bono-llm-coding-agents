@@ -17,6 +17,11 @@ Find more details in the [HTML-documentation](https://angelobono.github.io/bono-
 - Generated files will be linted
 - Generates generic type annotations for PHP 8\.1\+
 
+## Installation
+
+You need am AI Provider to run this project, the default is Ollama.
+You can find more information about Ollama [here](https://ollama.com/)
+or in the [HTML-documentation](https://angelobono.github.io/bono-llm-coding-agents/).
 ## Quick example
 
 ```php
@@ -24,32 +29,8 @@ Find more details in the [HTML-documentation](https://angelobono.github.io/bono-
 
 declare(strict_types=1);
 
-use Bono\Factory\ArchitectAgentFactory;
-use Bono\Factory\CoderAgentFactory;
-use Bono\Orchestrator;
-use Bono\Provider\OllamaProvider;
-
-use function array_keys;
-use function implode;
-
-// 1) REAL provider → uses your local Ollama
-$ollama = new OllamaProvider('http://localhost:11434/api');
-
-// 2) Agents from factory
-$architect = (new ArchitectAgentFactory($ollama))->__invoke();
-$coder     = (new CoderAgentFactory($ollama))->__invoke();
-
-// 3) Build orchestrator
-$orchestrator = new Orchestrator($architect, $coder);
-
-// 4) Register StableDiffusion (optional)
-// $orchestrator->registerTool('stable_diffusion', new StableDiffusion());
-
-// 5) Test user story
-$userStory = 'As a doctor, I want a dashboard with patient records.';
-
-// 6) Execute task
-$result = $orchestrator->processTask($userStory);
+$app = require 'config/app.php';
+$app->processTask('As a doctor, I want a dashboard with patient records.');
 ```
 
 Generated files:

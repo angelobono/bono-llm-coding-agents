@@ -148,7 +148,7 @@ I used in this project:
 
 ### People
 
-from which I learned a lot. I recommend to follow their videos, books, and articles:
+I recommend to follow their videos, books, and articles:
 
 - [Marco Pivetta (Ocramius)](https://github.com/ocramius)
 - [Ralf Eggert](https://github.com/ralfeggert)

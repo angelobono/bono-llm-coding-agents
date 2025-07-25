@@ -121,7 +121,7 @@ class Orchestrator implements LoggerAwareInterface
             return $result;
         }
 
-        $this->logger->info("Geplante Dateien: " . implode(', ', $plan['files']));
+        $this->logger->debug("Geplante Dateien: " . implode(', ', $plan['files']));
         $generatedFiles = [];
         $lastResponse   = null;
 
@@ -146,7 +146,7 @@ class Orchestrator implements LoggerAwareInterface
 
                 $lastResponse = $response; // Merke die letzte Antwort
 
-                $this->logger->info("[Coder-Response]: {$response}");
+                $this->logger->debug("[Coder-Response]: {$response}");
 
                 if ($this->isToolCall($response)) {
                     $decoded = LlmResponseParser::parseJson($response);
@@ -277,7 +277,7 @@ class Orchestrator implements LoggerAwareInterface
         // Optional: PHP-Lint Check
         if (str_ends_with($fileName, '.php')) {
             $lintResult = shell_exec("php -l " . escapeshellarg($fullPath));
-            $this->logger->info("[Lint] " . trim($lintResult));
+            $this->logger->debug("[Lint] " . trim($lintResult));
         }
         return $fullPath;
     }
@@ -321,7 +321,8 @@ class Orchestrator implements LoggerAwareInterface
         return <<<PROMPT
 Du bist ein PHP-Coder. Du verwendest Standards wie PSR und ITEM-drafts und Best
 Practices. Deine bevorzugtenLibraries/PHP-Extensions sind Mezzio, Laminas, Doctrine and Monolog.
-Hier ist das Projekt in kompakter Form:
+Never use PHP-Closing-Tags in .php files. Hier ist das Projekt in kompakter 
+Form:
 
 Requirements: {$requirements}
 Entities: {$entities}
@@ -330,11 +331,13 @@ Komplexität: {$analysis->getComplexity()}
 Architektur: {$analysis->getArchitecture()}
 
 Deine Aufgabe: Generiere NUR die Datei **{$fileName}**.
+
 WICHTIG:
+- Verwende nur Englisch
 - Gib nur den reinen PHP-Code zurück
 - Maximale Zeilenlänge: 80 Zeichen
 - Verwende PHP 8.2+ Features, wo sinnvoll
-- Dont use closing PHP-Tags \?>
+- Verwende immer opening PHP-Tags `<?php` und schließe sie nicht ab
 - Keine Erklärungen, keine zusätzlichen Texte
 - Fertig = wenn du diese eine Datei abgeschlossen hast
 - Verwende PHP Generics (@template T), wo sinnvoll
@@ -354,8 +357,9 @@ PROMPT;
         }
         $useStatements = $this->getUseStatementsFromAnalysis($result->files);
         $prompt        = <<<PROMPT
-Erzeuge eine gültige `composer.json` für ein PHP-Projekt.  
-Nutze die folgende Vorlage und ergänze die notwendigen Pakete unter `"require"` basierend auf diesen verwendeten `use`-Statements:  
+Du bist ein PHP-Coder. Deine Aufgabe ist es, eine gültige `composer.json` für
+ ein PHP-Projekt zu erstellen. Verwende die folgenden `use`-Statements, um die
+abhängigen Pakete zu identifizieren und füge sie unter `"require"` hinzu:  
 {$useStatements}
 
 ```json
@@ -369,7 +373,7 @@ Nutze die folgende Vorlage und ergänze die notwendigen Pakete unter `"require"`
     },
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "App\\\\": "src/"
         }
     },
     "require-dev": {
@@ -381,7 +385,13 @@ Nutze die folgende Vorlage und ergänze die notwendigen Pakete unter `"require"`
 }
 ```
 
-Gib ausschließlich die fertige `composer.json` zurück. Keine Erklärungen, keine Kommentare.
+Wichtig:
+- Gib ausschließlich die fertige `composer.json` zurück. Keine Erklärungen, 
+keine Kommentare.
+- Verändere die Struktur nicht, sondern erweitere nur die `"require"`-Sektion
+- Verwende die aktuellsten stabilen Versionen der Pakete
+- Achte darauf, dass die `composer.json` gültig ist und alle Abhängigkeiten
+  korrekt aufgelistet sind.
 
 PROMPT;
         $response      = $this->coder->generateCode($prompt, true);
@@ -390,7 +400,7 @@ PROMPT;
             $composerData['extra'] = [
                 'bono_analysis' => [
                     'requirements' => $analysis->getRequirements(),
-                    'entities' => $analysis->getEntities(),
+                 \\   'entities' => $analysis->getEntities(),
                     'actions' => $analysis->getActions(),
                     'complexity' => $analysis->getComplexity(),
                     'architecture' => $analysis->getArchitecture()
@@ -416,7 +426,7 @@ PROMPT;
 
                 if (preg_match_all('/use\s+([a-zA-Z0-9_\\\\]+);/', $content, $matches)) {
                     foreach ($matches[1] as $use) {
-                        $useStatements[] = $use . PHP_EOL;
+                        $useStatements[] = $use;
                     }
                 }
             }

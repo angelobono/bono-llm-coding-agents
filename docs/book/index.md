@@ -13,3 +13,4 @@ This project is in an experimental state, but already usable.
 - Modular design
 - Integration and unit tests
 - Compatible with PHP 8\.2\+
+- Generated files will be linted

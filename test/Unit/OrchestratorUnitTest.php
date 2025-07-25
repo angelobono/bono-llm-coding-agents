@@ -22,7 +22,7 @@ use const JSON_PRETTY_PRINT;
  * Dieser Test simuliert die Zusammenarbeit von Architekt- und Coder-Agenten
  * bei der Entwicklung eines Dashboards mit Patientenakte.
  */
-class MultiAgentUnitTest extends TestCase
+class OrchestratorUnitTest extends TestCase
 {
     #[Test]
     public function planAndDevelopADashboard()

@@ -21,7 +21,7 @@ final class LoggerFactory
     public function __construct(
         private readonly string $name = 'App',
         private readonly array $handlers = [
-            new StreamHandler('php://stdout', Level::Debug)
+            new StreamHandler('php://stdout', Level::Info)
         ]
     ) {
     }

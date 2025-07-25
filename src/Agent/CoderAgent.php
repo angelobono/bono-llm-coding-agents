@@ -19,7 +19,7 @@ class CoderAgent implements LoggerAwareInterface
 
     public function __construct(
         private LlmProviderInterface $provider,
-        private string $codingModel = 'deepseek-coder:6.7b'
+        private string $codingModel = 'qwen2.5-coder:3b'
     ) {
         if (! $this->logger) {
             $this->logger = (new LoggerFactory(self::class))->__invoke();
@@ -46,11 +46,6 @@ class CoderAgent implements LoggerAwareInterface
 {$tools}
   
 PROMPT;
-
-        $this->logger->info("[Coder] sendet Nachricht an Modell", [
-            'model'  => $this->codingModel,
-            'prompt' => $finalPrompt,
-        ]);
 
         $response = $this->provider->generateStreamResult($finalPrompt, [
             'model'       => $this->codingModel,

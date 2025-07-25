@@ -32,8 +32,8 @@ class ArchitectAgent implements LoggerAwareInterface
 
     public function __construct(
         private LlmProviderInterface $provider,
-        private string $analysisModel = 'llama3.2:3b',
-        private string $planningModel = 'llama3.2:3b'
+        private readonly string $analysisModel = 'llama3.2:3b',
+        private readonly string $planningModel = 'llama3.2:3b'
     ) {
         if (! $this->logger) {
             $this->logger = (new LoggerFactory(self::class))->__invoke();
@@ -45,7 +45,7 @@ class ArchitectAgent implements LoggerAwareInterface
         $analysis = new UserStoryAnalysis($userStory);
         $prompt   = <<<PROMPT
 Du bist ein Software-Architekt. Beschreibe entities und actions als OpenAPI-Objekte.
-Analysiere folgende User Story und extrahiere:
+Verwende nur Englisch. Analysiere folgende User Story und extrahiere:
 - requirements
 - entities
 - actions
@@ -80,14 +80,10 @@ PROMPT;
             'temperature' => 0.1,
         ]);
 
-        $this->logger->info("[Architekt-Analyse-Response]: " . $response);
-
         $decoded = LlmResponseParser::parseJson($response);
 
-        $this->logger->debug(
-            '[Architekt-Analyse-Response-Decoded]: ',
-            $decoded
-        );
+        $this->logger->debug('[Architekt-Analyse]: ', $decoded);
+
         if (isset($decoded['requirements']) && is_array($decoded['requirements'])) {
             $analysis->setRequirements(array_map(
                 fn($req) => $req['name'] ?? 'Unbenannt',
@@ -150,7 +146,7 @@ PROMPT;
             'temperature' => 0.1,
         ]);
 
-        $this->logger->info("[Architekt-Plan]: " . $response);
+        $this->logger->debug("[Plan]: " . $response);
 
         $data = LlmResponseParser::parseJson($response);
 

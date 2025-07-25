@@ -102,7 +102,7 @@ class OllamaProvider implements LlmProviderInterface, LoggerAwareInterface
     {
         $model = $options['model'] ?? 'llama3.1:7b';
 
-        $this->logger->info("OllamaProvider → Sende Stream-Prompt an Modell", [
+        $this->logger->debug("OllamaProvider → Sende Stream-Prompt an Modell", [
             'model'      => $model,
             'prompt_len' => strlen($prompt),
         ]);

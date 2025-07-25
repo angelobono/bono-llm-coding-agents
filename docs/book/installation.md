@@ -17,7 +17,7 @@ cd bono-llm
 **Step 3:** Download models, the default setup uses:
 ```bash
 ollama pull llama3.2:3b
-ollama pull deepseek-coder:6.7b:
+ollama pull qwen2.5-coder:3b
 ```
 
 **Step 3:** Install dependencies

@@ -1,0 +1,41 @@
+site_name: Bono LLM Coding Agents
+site_description: Dokumentation für das PHP LLM Coding Agents Projekt
+site_author: Angelo Bono
+repo_url: https://github.com/angelobono/bono-llm
+docs_dir: docs/book
+site_dir: docs/html
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: light green
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Helles Design
+    - scheme: slate
+      primary: green
+      accent: lime
+      toggle:
+        icon: material/weather-night
+        name: Dunkles Design
+  features:
+    - navigation.expand
+    - navigation.tabs
+    - navigation.top
+    - navigation.footer
+    - navigation.tracking
+    - navigation.instant
+    - navigation.sections
+    - navigation.indexes
+    - navigation.path
+    - navigation.prune
+    - navigation.prev_next
+    - palette.toggle
+nav:
+  - Übersicht: index.md
+  - Installation: installation.md
+  - Architektur: architecture.md
+  - Beispiele: examples.md
+  - Entwicklung: development.md
+  - Lizenz: license.md

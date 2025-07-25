@@ -1,0 +1,257 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Bono\Agent;
+
+use Bono\Data\UserStoryAnalysis;
+use Bono\Factory\LoggerFactory;
+use Bono\Parser\LlmResponseParser;
+use Bono\Provider\LlmProviderInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+
+use function array_map;
+use function in_array;
+use function is_array;
+use function is_string;
+use function json_encode;
+
+use const JSON_PRETTY_PRINT;
+
+/**
+ * ArchitectAgent
+ *
+ * This agent analyzes user stories and creates implementation plans.
+ * It uses a language model to extract requirements, entities, and actions,
+ * and then generates a file structure based on the analysis.
+ */
+class ArchitectAgent implements LoggerAwareInterface
+{
+    use LoggerAwareTrait;
+
+    public function __construct(
+        private LlmProviderInterface $provider,
+        private string $analysisModel = 'llama3.2:3b',
+        private string $planningModel = 'llama3.2:3b'
+    ) {
+        if (! $this->logger) {
+            $this->logger = (new LoggerFactory(self::class))->__invoke();
+        }
+    }
+
+    public function analyseUserStory(string $userStory): UserStoryAnalysis
+    {
+        $analysis = new UserStoryAnalysis($userStory);
+        $prompt   = <<<PROMPT
+Du bist ein Software-Architekt. Beschreibe entities und actions als OpenAPI-Objekte.
+Analysiere folgende User Story und extrahiere:
+- requirements
+- entities
+- actions
+- complexity
+- architecture
+
+Antworte im JSON-Format:
+
+{
+  "requirements": [
+    { "name": "string", "beschreibung": "string" }
+  ],
+  # OpenAPI-Objekte für Entities, z.B.:
+  "entities": [
+    { "name": "string", "beschreibung": "string", "properties": { "propertyName": { "type": "string", "description": "string" } } }
+  ], 
+  # OpenAPI-Objekte für Actions, z.B.:
+  "actions": [
+    { "name": "string", "beschreibung": "string", "method": 
+    "GET|POST|PUT|DELETE", "path": "/api/example", "parameters": { "paramName": { "type": "string", "description": "string" } }, "responses": { "200": { "description": "string", "content": { "application/json": { "schema": { "\$ref": "#/components/schemas/ExampleResponse" } } } } } }
+  ],
+  "complexity": "low|medium|high",
+  "architecture": "a comma seperated list of architectural styles, e.g. microservices, monolith, serverless, ddd, hexagonal, layered, technical, event-driven, cqrs, clean, modular, etc.",
+}
+
+User Story:
+{$userStory}
+PROMPT;
+
+        $response = $this->provider->generateStreamResult($prompt, [
+            'model'       => $this->analysisModel,
+            'temperature' => 0.1,
+        ]);
+
+        $this->logger->info("[Architekt-Analyse-Response]: " . $response);
+
+        $decoded = LlmResponseParser::parseJson($response);
+
+        $this->logger->debug(
+            '[Architekt-Analyse-Response-Decoded]: ',
+            $decoded
+        );
+        if (isset($decoded['requirements']) && is_array($decoded['requirements'])) {
+            $analysis->setRequirements(array_map(
+                fn($req) => $req['name'] ?? 'Unbenannt',
+                $decoded['requirements']
+            ));
+        }
+        if (isset($decoded['entities']) && is_array($decoded['entities'])) {
+            $analysis->setEntities(array_map(
+                fn($ent) => $ent['name'] ?? 'Unbenannt',
+                $decoded['entities']
+            ));
+        }
+        if (isset($decoded['actions']) && is_array($decoded['actions'])) {
+            $analysis->setActions(array_map(
+                fn($act) => $act['name'] ?? 'Unbenannt',
+                $decoded['actions']
+            ));
+        }
+        if (isset($decoded['complexity']) && in_array($decoded['complexity'], ['low', 'medium', 'high'])) {
+            $analysis->setComplexity($decoded['complexity']);
+        } else {
+            $analysis->setComplexity('unknown');
+        }
+        if (isset($decoded['architecture']) && is_string($decoded['architecture'])) {
+            $analysis->setArchitecture($decoded['architecture']);
+        } else {
+            $analysis->setArchitecture('unknown');
+        }
+        return $analysis;
+    }
+
+    public function createImplementationPlan(UserStoryAnalysis $analysis): array
+    {
+        $requirements = json_encode($analysis->getRequirements(), JSON_PRETTY_PRINT);
+        $entities     = json_encode($analysis->getEntities(), JSON_PRETTY_PRINT);
+        $actions      = json_encode($analysis->getActions(), JSON_PRETTY_PRINT);
+
+        $prompt = <<<PROMPT
+Du bist ein Software-Architekt.
+Basierend auf den Requirements plane bitte die nötigen Dateien und deren Zweck.
+
+Requirements: {$requirements}
+Entities: {$entities}
+Actions: {$actions}
+Komplexität: {$analysis->getComplexity()}
+Architektur: {$analysis->getArchitecture()}
+
+Antworte im JSON-Format:
+{
+  "files": [
+    {"name": "Patient.php", "purpose": "Entity für Patientendaten"},
+    {"name": "DashboardController.php", "purpose": "Controller für Dashboard"},
+    {"name": "AuthService.php", "purpose": "Login & Auth"}
+  ]
+}
+PROMPT;
+
+        $response = $this->provider->generateStreamResult($prompt, [
+            'model'       => $this->planningModel,
+            'temperature' => 0.1,
+        ]);
+
+        $this->logger->info("[Architekt-Plan]: " . $response);
+
+        $data = LlmResponseParser::parseJson($response);
+
+        if (! isset($data['files']) || ! is_array($data['files'])) {
+            $data['files'] = [];
+        }
+        return [
+            'files' => array_map(
+                fn($f) => $f['name'] ?? 'Unknown.php',
+                $data['files']
+            ),
+        ];
+    }
+
+    public function createImplementationPlanFromCoderFeedback(
+        string $coderResponse
+    ): array {
+        $prompt = <<<PROMPT
+Der Coder hat diese Antwort gegeben und benötigt mehr Details, um fortzufahren:
+
+\"\"\"
+{$coderResponse}
+\"\"\"
+
+Analysiere genau, welche Informationen im Coder-Response fehlen oder angefragt werden. Beantworte diese Lücken mit maximal möglicher Konkretion.
+
+Liefere als gültiges JSON:
+{
+  "requirements": [
+    { "name": "string", "beschreibung": "string" }
+  ],
+  # OpenAPI-Objekte für Entities, z.B.:
+  "entities": [
+    { "name": "string", "beschreibung": "string", "properties": { "propertyName": { "type": "string", "description": "string" } } }
+  ], 
+  # OpenAPI-Objekte für Actions, z.B.:
+  "actions": [
+    { "name": "string", "beschreibung": "string", "method": 
+    "GET|POST|PUT|DELETE", "path": "/api/example", "parameters": { "paramName": { "type": "string", "description": "string" } }, "responses": { "200": { "description": "string", "content": { "application/json": { "schema": { "\$ref": "#/components/schemas/ExampleResponse" } } } } } }
+  ],
+  "files": [
+    { "name": "string", "purpose": "string" }
+  ],
+  "complexity": "low|medium|high",
+  "architecture": "a comma seperated list of architectural styles, e.g. microservices, monolith, serverless, ddd, hexagonal, layered, technical, event-driven, cqrs, clean, modular, etc.",
+}
+
+Wichtige Regeln:
+- Verwende OpenAPI-Objekte für Entities und Actions.
+- Ergänze immer konkrete Feldnamen und Datentypen für alle relevanten Entities.
+- Wenn Methoden im Code fehlen, definiere sie mit Name und Zweck.
+- Falls der Coder unklare Dinge anspricht, triff sinnvolle Annahmen und liefere Defaults.
+- Antworte nur mit JSON, keine Erklärungen oder Kommentare.
+PROMPT;
+
+        $response = $this->provider->generateStreamResult($prompt, [
+            'model'       => $this->planningModel,
+            'temperature' => 0.1,
+        ]);
+        $this->logger->info("[Architekt-Feedback]: " . $response);
+        return LlmResponseParser::parseJson($response);
+    }
+
+    public function analyseFiles(
+        array $fileContents,
+        ?UserStoryAnalysis $analysis
+    ) {
+        $json   = json_encode($fileContents, JSON_PRETTY_PRINT);
+        $prompt = <<<PROMPT
+Du bist ein Software-Architekt. Analysiere den Code und liefere eine detaillierte Analyse der Architektur, der verwendeten Patterns und der Komplexität.
+Analysiere die folgenden Dateien und liefere eine detaillierte Analyse der Architektur, der verwendeten Patterns und der Komplexität.
+
+Dateien:
+{$json}
+
+Antworte im JSON-Format:
+{
+  "architecture": "a comma seperated list of architectural styles, e.g. microservices, monolith, serverless, ddd, hexagonal, layered, technical, event-driven, cqrs, clean, modular, etc.",
+  "complexity": "low|medium|high",
+  "patterns": ["pattern1", "pattern2", ...],
+  "details": "any additional details about the architecture"
+}
+PROMPT;
+
+        $response = $this->provider->generateStreamResult($prompt, [
+            'model'       => $this->planningModel,
+            'temperature' => 0.1,
+        ]);
+
+        $this->logger->info("[Architekt-Datei-Analyse]: " . $response);
+
+        $decoded = LlmResponseParser::parseJson($response);
+
+        if (isset($decoded['architecture'])) {
+            $analysis->setArchitecture($decoded['architecture']);
+        }
+        if (isset($decoded['complexity']) && in_array($decoded['complexity'], ['low', 'medium', 'high'])) {
+            $analysis->setComplexity($decoded['complexity']);
+        } else {
+            $analysis->setComplexity('unknown');
+        }
+        return $decoded;
+    }
+}

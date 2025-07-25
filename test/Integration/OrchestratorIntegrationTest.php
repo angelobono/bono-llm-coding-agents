@@ -12,7 +12,6 @@ use Bono\Provider\OllamaProvider;
 use Bono\Factory\CoderAgentFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Bono\Factory\ArchitectAgentFactory;
-use Bono\Tests\Mock\StableDiffusionMock;
 
 use function implode;
 use function array_keys;
@@ -104,11 +103,10 @@ USER_STORY
         );
 
         // 3) Orchestrator bauen
-        $orchestrator = new Orchestrator($architect, $coder);
+        return new Orchestrator($architect, $coder);
         /*$orchestrator->registerTool(
             'stable_diffusion', new StableDiffusionMock()
         );*/
-        return $orchestrator;
     }
 
     public function assertTaskResultIsValid(\Bono\Model\CodingTask $result

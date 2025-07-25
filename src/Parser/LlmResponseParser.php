@@ -48,37 +48,34 @@ class LlmResponseParser
     {
         $raw = trim($response);
 
-        // Extrahiere JSON-Codeblock
-        if (preg_match('/```json\s*(.*?)\s*```/s', $raw, $matches)) {
-            $json = trim($matches[1]);
-        } elseif (preg_match('/```(.*?)```/s', $raw, $matches)) {
-            $json = trim($matches[1]);
+        // Entferne ```json und ``` falls vorhanden
+        $raw = preg_replace('/^```json|^```|```$/m', '', $raw);
+
+        // Schneide nach letztem }
+        $jsonEnd = strrpos($raw, '}');
+
+        if ($jsonEnd !== false) {
+            $json = substr($raw, 0, $jsonEnd + 1);
         } else {
-            $json = self::extractFirstJsonObject($raw);
+            $json = $raw;
         }
 
-        // Entferne alles nach dem letzten }
-        $jsonEnd = strrpos($json, '}');
-        if ($jsonEnd !== false) {
-            $json = substr($json, 0, $jsonEnd + 1);
-        }
+        // Entferne Steuerzeichen
+        $json = preg_replace('/[\x00-\x1F\x7F]/u', '', $json);
 
         // Escape einzelne Backslashes, die nicht schon doppelt sind
         $json = preg_replace(
             '/(?<!\\\\)\\\\(?![\\\\"\/bfnrtu])/', '\\\\', $json
         );
 
-        // Entferne Steuerzeichen, die JSON stören könnten
-        $json = preg_replace('/[\x00-\x1F\x7F]/u', '', $json);
-
         $data = json_decode($json, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             error_log(
-                "[JSON-ERROR]: JSON=" . $json . ' Error=' . json_last_error_msg(
-                )
+                "[JSON-ERROR]: JSON=" . $json .
+                ' Error=' . json_last_error_msg()
             );
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Invalid JSON format: ' . json_last_error_msg()
             );
         }

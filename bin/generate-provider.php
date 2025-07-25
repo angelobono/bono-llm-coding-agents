@@ -10,10 +10,13 @@ require_once __DIR__ . '/../bootstrap.php';
 $app = require __DIR__ . '/../config/app.php';
 $app->setLogger((new Bono\Factory\LoggerFactory(Orchestrator::class))());
 
-$interface = LlmProviderInterface::class;
+$interface = json_encode(
+    LlmProviderInterface::class,
+    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+);
 
 try {
-    $reflection = new ReflectionClass($interface);
+    $reflection = new ReflectionClass(LlmProviderInterface::class);
     $methods = json_encode(
         array_map(
             static fn(ReflectionMethod $method) => [
@@ -29,7 +32,8 @@ try {
                 'returnType' => (string)$method->getReturnType(),
             ],
             $reflection->getMethods(ReflectionMethod::IS_PUBLIC)
-        ), JSON_PRETTY_PRINT
+        ),
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
     );
 } catch (ReflectionException $e) {
     echo "Error reflecting interface {$interface}: " . $e->getMessage()

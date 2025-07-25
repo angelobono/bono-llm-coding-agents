@@ -99,26 +99,6 @@ Non-acceptance criteria
 USER_STORY);
 ```
 
-Generated files:
-
-```php
-📂 d7b5e56758d02ddde13307b955372e66/
-    📄 composer.json
-    🗂️ src/
-        📂 App/
-            🎮 Controller/
-                📄 DashboardController.php
-            🗃️ Database/
-                📄 DatabaseConnection.php
-            📂 Entity/
-                📄 Patient.php
-                📄 PatientRecord.php
-            🔧 Service/
-                📄 AuthService.php
-            🖼️ View/
-                📄 DashboardView.php
-```
-
 ## Known Issues
 
 - Ollama sometimes returns empty responses, which can lead to errors in the agent workflow. The
@@ -146,6 +126,37 @@ composer cs-check
 ## License
 
 This project is licensed under the [BSD-3-Clause License](LICENSE.md).
+
+## Thanks
+
+Special thanks to the following:
+
+### Libraries / Tools
+
+I used in this project:
+
+- [laminas/*](https://laminas.dev/)
+- [mezzio/*](https://mezzio.dev/)
+- [symfony/*](https://symfony.com/)
+- [swoole/ide-helper](https://github.com/swoole/ide-helper)
+- [ollama](https://ollama.com/)
+- [phpstan](https://phpstan.org/)
+- [psr/*](https://www.php-fig.org/)
+- [vimeo/psalm](https://github.com/vimeo/psalm)
+- [phpunit/phpunit](https://github.com/phpunit/phpunit)
+- [ramsey/uuid](https://github.com/ramsey/uuid)
+
+### People
+
+from which I learned a lot. I recommend to follow their videos, books, and articles:
+
+- [Marco Pivetta (Ocramius)](https://github.com/ocramius)
+- [Ralf Eggert](https://github.com/ralfeggert)
+- [Kent Beck](https://github.com/kentbeck)
+- [Martin Fowler](https://github.com/martinfowler)
+- [Gregor Hohpe](https://github.com/elit0451/EIPatterns)
+- [Robert C. Martin (Uncle Bob)](https://github.com/unclebob)
+- [Dr. Jeff Sutherland](https://github.com/scrumatscale/official-guide)
 
 ## Contact
 

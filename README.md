@@ -2,7 +2,7 @@
 
 **PHP LLM Coding Agents**  
 Automated multi-agent architecture for code generation, analysis, and orchestration.
-I can support various AI providers with custom implementation, the default is using an OllamaProvider. 
+It can support various AI providers with custom implementation, the default is using an OllamaProvider. 
 This project is in an experimental state, but already usable.
 
 Find more details in the [HTML-documentation](https://angelobono.github.io/bono-llm-coding-agents/).

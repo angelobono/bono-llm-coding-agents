@@ -3,11 +3,14 @@
 ## Example using the Ollama LLM provider:
 
 ```php
+<?php
+
+declare(strict_types=1);
+
 use Bono\Factory\ArchitectAgentFactory;
 use Bono\Factory\CoderAgentFactory;
 use Bono\Orchestrator;
 use Bono\Provider\OllamaProvider;
-use Bono\Tests\Mock\StableDiffusionMock;
 
 use function array_keys;
 use function implode;
@@ -22,21 +25,16 @@ $coder     = (new CoderAgentFactory($ollama))->__invoke();
 // 3) Build orchestrator
 $orchestrator = new Orchestrator($architect, $coder);
 
-// 4) Register StableDiffusion MOCK (no real API call)
-$orchestrator->registerTool('stable_diffusion', new StableDiffusionMock());
+// 4) Register StableDiffusion (optional)
+// $orchestrator->registerTool('stable_diffusion', new StableDiffusion());
 
 // 5) Test user story
-$userStory = <<<TXT
-As a doctor, I want a dashboard with patient records.
-As a developer, I want us to use only REST APIs.
-The dashboard should show an overview of all patients, including name, age, and diagnosis.
-There should also be a search function to find patients by name.
-TXT;
+$userStory = 'As a doctor, I want a dashboard with patient records.';
 
 // 6) Execute task
 $result = $orchestrator->processTask($userStory);
 
 // Optional → Output logging
-echo "\nAnalysis complexity: " . $result->analysis->complexity;
-echo "\nGenerated files: " . implode(', ', array_keys($result->files));
+echo '\nAnalysis complexity: ' . $result->analysis->complexity;
+echo '\nGenerated files: ' . implode(', ', array_keys($result->files));
 ```

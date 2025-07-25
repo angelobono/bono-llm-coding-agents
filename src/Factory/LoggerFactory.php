@@ -16,10 +16,14 @@ use Psr\Log\LoggerInterface;
  * with a debug level. It can be extended or modified to include additional
  * handlers or configurations as needed.
  */
-class LoggerFactory
+final class LoggerFactory
 {
-    public function __construct(private string $name = 'App')
-    {
+    public function __construct(
+        private readonly string $name = 'App',
+        private readonly array $handlers = [
+            new StreamHandler('php://stdout', Level::Debug)
+        ]
+    ) {
     }
 
     /**
@@ -28,7 +32,10 @@ class LoggerFactory
     public function __invoke(): LoggerInterface
     {
         $logger = new Logger($this->name);
-        $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
+
+        foreach ($this->handlers as $handler) {
+            $logger->pushHandler($handler);
+        }
         return $logger;
     }
 }

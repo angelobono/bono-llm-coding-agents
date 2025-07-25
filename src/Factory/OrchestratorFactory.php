@@ -11,11 +11,11 @@ use Bono\Orchestrator;
  *
  * Diese Factory erstellt eine Instanz des Orchestrators mit den erforderlichen Agenten.
  */
-final readonly class OrchestratorFactory
+final class OrchestratorFactory
 {
     public function __construct(
-        private ArchitectAgentFactory $architektFactory,
-        private CoderAgentFactory $coderFactory
+        private readonly ArchitectAgentFactory $architektFactory,
+        private readonly CoderAgentFactory $coderFactory
     ) {
     }
 

@@ -10,6 +10,11 @@ services:
       - .:/var/www/html
     depends_on:
       - ollama
+    environment:
+        - OLLAMA_URL=http://ollama:11434
+        - ARCHITECT_AGENT_ANALYSIS_MODEL=llama3.2:3b
+        - ARCHITECT_AGENT_GENERATION_MODEL=llama3.2:3b
+        - CODER_AGENT_CODING_MODEL=deepseek-coder:6.7b
 
   ollama:
     image: ollama/ollama:latest

@@ -31,7 +31,7 @@ class MultiAgentIntegrationTest extends TestCase
 
         // 2) Agenten aus Factory
         $architect = (new ArchitectAgentFactory($ollama))->__invoke();
-        $coder     = (new CoderAgentFactory($ollama))->__invoke();
+        $coder     = (new CoderAgentFactory($ollama, 'llama3.2:3b'))->__invoke();
 
         // 3) Orchestrator bauen
         $orchestrator = new Orchestrator($architect, $coder);
@@ -40,10 +40,7 @@ class MultiAgentIntegrationTest extends TestCase
         $orchestrator->registerTool('stable_diffusion', new StableDiffusionMock());
 
         // 5) Test-UserStory
-        $userStory = 'Als Arzt möchte ich ein Dashboard mit Patientenakte. 
-        Als Entwickler möchte ich, das wir nur REST-APIs verwenden. 
-        Das Dashboard soll eine Übersicht über alle Patienten anzeigen, inklusive Name, Alter und Diagnose. 
-        Es soll auch eine Suchfunktion geben, um Patienten nach Name zu finden.';
+        $userStory = 'As a doctor, I want a dashboard with patient records.';
 
         // 6) Task ausführen
         $result = $orchestrator->processTask($userStory);

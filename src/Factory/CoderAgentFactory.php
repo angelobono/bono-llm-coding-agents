@@ -7,15 +7,25 @@ namespace Bono\Factory;
 use Bono\Agent\CoderAgent;
 use Bono\Provider\LlmProviderInterface;
 
-class CoderAgentFactory
+/**
+ * Factory for creating instances of CoderAgent.
+ *
+ * This factory is responsible for instantiating the CoderAgent with the
+ * specified LLM provider and coding model.
+ */
+final class CoderAgentFactory
 {
-    public function __construct(private LlmProviderInterface $provider)
-    {
-        // Konstruktor kann leer bleiben, da keine Initialisierung nötig ist
+    public function __construct(
+        private readonly LlmProviderInterface $provider,
+        private readonly string $codingModel = 'deepseek-coder:6.7b'
+    ) {
     }
 
     public function __invoke(): CoderAgent
     {
-        return new CoderAgent($this->provider);
+        return new CoderAgent(
+            $this->provider,
+            $this->codingModel
+        );
     }
 }

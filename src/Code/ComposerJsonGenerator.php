@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bono\Code;
 
-use Bono\Data\TaskResult;
+use Bono\Model\CodingTask;
 use Bono\Agent\CoderAgent;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -21,12 +21,7 @@ class ComposerJsonGenerator implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    public function __construct(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
-    }
-
-    public function generate(TaskResult $result, CoderAgent $coder): void
+    public function generate(CodingTask $result, CoderAgent $coder): void
     {
         $targetDir = __DIR__ . '/../../generated/' . $result->getId() . '/';
         if (!is_dir($targetDir)) {

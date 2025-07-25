@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace Bono\Provider;
 
+use Psr\Log\LoggerAwareTrait;
 use Bono\Factory\LoggerFactory;
 use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
+use Bono\Api\LlmProviderInterface;
 
-use function array_merge;
-use function fclose;
 use function fgets;
-use function file_get_contents;
 use function fopen;
+use function rtrim;
+use function fclose;
+use function strlen;
+use function array_merge;
 use function json_decode;
 use function json_encode;
-use function rtrim;
+use function file_get_contents;
 use function stream_context_create;
-use function strlen;
 
 class OllamaProvider implements LlmProviderInterface, LoggerAwareInterface
 {
@@ -28,17 +29,18 @@ class OllamaProvider implements LlmProviderInterface, LoggerAwareInterface
 
     public function __construct(
         string $baseUrl = 'http://localhost:11434/api',
-        array $defaultOptions = [
+        array $defaultOptions
+        = [
             'temperature' => 0.3,
             'top_p'       => 0.9,
             'num_ctx'     => 16000,
         ]
     ) {
-        $this->baseUrl        = rtrim($baseUrl, '/');
+        $this->baseUrl = rtrim($baseUrl, '/');
         $this->defaultOptions = $defaultOptions;
 
         // Falls kein Logger gesetzt wurde → NullLogger
-        if (! $this->logger) {
+        if (!$this->logger) {
             $this->logger = (new LoggerFactory(self::class))->__invoke();
         }
     }
@@ -56,7 +58,9 @@ class OllamaProvider implements LlmProviderInterface, LoggerAwareInterface
             'model'   => $model,
             'prompt'  => $prompt,
             'stream'  => false,
-            'options' => array_merge($this->defaultOptions, $options['options'] ?? []),
+            'options' => array_merge(
+                $this->defaultOptions, $options['options'] ?? []
+            ),
         ];
 
         $context = stream_context_create([
@@ -67,7 +71,9 @@ class OllamaProvider implements LlmProviderInterface, LoggerAwareInterface
             ],
         ]);
 
-        $result = @file_get_contents($this->baseUrl . '/generate', false, $context);
+        $result = @file_get_contents(
+            $this->baseUrl . '/generate', false, $context
+        );
 
         if ($result === false) {
             $this->logger->error("OllamaProvider → Anfrage fehlgeschlagen", [
@@ -76,7 +82,7 @@ class OllamaProvider implements LlmProviderInterface, LoggerAwareInterface
             return '';
         }
 
-        $json     = json_decode($result, true);
+        $json = json_decode($result, true);
         $response = $json['response'] ?? '';
 
         $this->logger->debug("OllamaProvider → Antwort empfangen", [
@@ -98,8 +104,9 @@ class OllamaProvider implements LlmProviderInterface, LoggerAwareInterface
     }
 
     // src/Provider/OllamaProvider.php
-    public function generateStream(string $prompt, callable $onData, array $options = []): void
-    {
+    public function generateStream(string $prompt, callable $onData,
+        array $options = []
+    ): void {
         $model = $options['model'] ?? 'llama3.1:7b';
 
         $this->logger->debug("OllamaProvider → Sende Stream-Prompt an Modell", [
@@ -111,11 +118,13 @@ class OllamaProvider implements LlmProviderInterface, LoggerAwareInterface
             'model'   => $model,
             'prompt'  => $prompt,
             'stream'  => true,
-            'options' => array_merge($this->defaultOptions, $options['options'] ?? []),
+            'options' => array_merge(
+                $this->defaultOptions, $options['options'] ?? []
+            ),
         ];
 
-        $url     = $this->baseUrl . '/generate';
-        $opts    = [
+        $url = $this->baseUrl . '/generate';
+        $opts = [
             'http' => [
                 'method'  => 'POST',
                 'header'  => "Content-Type: application/json",
@@ -126,8 +135,11 @@ class OllamaProvider implements LlmProviderInterface, LoggerAwareInterface
         $context = stream_context_create($opts);
 
         $handle = @fopen($url, 'r', false, $context);
-        if (! $handle) {
-            $this->logger->error("OllamaProvider → Stream-Anfrage fehlgeschlagen", ['url' => $url]);
+        if (!$handle) {
+            $this->logger->error(
+                "OllamaProvider → Stream-Anfrage fehlgeschlagen",
+                ['url' => $url]
+            );
             return;
         }
 

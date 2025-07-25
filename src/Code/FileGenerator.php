@@ -6,14 +6,12 @@ namespace Bono\Code;
 
 use Co\Channel;
 use Swoole\Coroutine;
-use Bono\Data\TaskResult;
+use Bono\Model\CodingTask;
 use Bono\Agent\CoderAgent;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerAwareInterface;
 use Bono\Parser\LlmResponseParser;
-
-use function Swoole\Coroutine;
 
 /**
  * FileGenerator is responsible for generating files based on a given plan
@@ -24,12 +22,9 @@ class FileGenerator implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    public function __construct(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
-    }
-
-    public function generateFilesParallel(array $plan, TaskResult $result,
+    public function generateFilesParallel(
+        array $plan,
+        CodingTask $result,
         CoderAgent $coder
     ): array {
         $generatedFiles = [];
@@ -38,16 +33,20 @@ class FileGenerator implements LoggerAwareInterface
                 $channels = [];
                 foreach ($plan['files'] as $fileName) {
                     $channels[$fileName] = new Channel(1);
-                    Coroutine::create(
-                        function () use (
-                            $result, $fileName, $plan, $channels, $coder
-                        ) {
-                            $this->processFileGenerationTask(
-                                $result, $fileName, $plan, $channels[$fileName],
-                                $coder
-                            );
-                        }
-                    );
+                    Coroutine::create(function () use (
+                        $result,
+                        $fileName,
+                        $plan,
+                        $channels,
+                        $coder
+                    ) {
+                        $this->processFileGenerationTask(
+                            $result,
+                            $fileName,
+                            $channels[$fileName],
+                            $coder
+                        );
+                    });
                 }
                 foreach ($channels as $fileName => $channel) {
                     $generatedFiles[$fileName] = $channel->pop(0.5);
@@ -57,8 +56,11 @@ class FileGenerator implements LoggerAwareInterface
         return $generatedFiles;
     }
 
-    private function processFileGenerationTask(TaskResult $result,
-        string $fileName, array $plan, Channel $channel, CoderAgent $coder
+    private function processFileGenerationTask(
+        CodingTask $result,
+        string $fileName,
+        Channel $channel,
+        CoderAgent $coder
     ): void {
         $toolResult = null;
         $maxRounds = 10;
@@ -69,6 +71,7 @@ class FileGenerator implements LoggerAwareInterface
                 $toolResult = null;
             }
             $response = trim($coder->generateCode($fileName));
+
             if (!LlmResponseParser::containsCode($response)) {
                 break;
             }
@@ -81,15 +84,19 @@ class FileGenerator implements LoggerAwareInterface
         }
     }
 
-    private function saveGeneratedFile(string $path, string $fileName,
+    private function saveGeneratedFile(
+        string $path,
+        string $fileName,
         string $content
     ): string {
         $targetDir = __DIR__ . '/../../generated/' . $path . '/src';
+
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0777, true);
         }
         $fullPath = $targetDir . '/' . basename($fileName);
         file_put_contents($fullPath, $content);
+
         if (str_ends_with($fileName, '.php')) {
             $lintResult = shell_exec("php -l " . escapeshellarg($fullPath));
             $this->logger->debug("[Lint] " . trim($lintResult));

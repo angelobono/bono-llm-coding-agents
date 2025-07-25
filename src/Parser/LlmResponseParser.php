@@ -19,11 +19,16 @@ use function trim;
 
 use const JSON_ERROR_NONE;
 
+/**
+ * Class LlmResponseParser
+ * This class provides methods to parse responses from LLMs, specifically for
+ * extracting code blocks and JSON data.
+ */
 class LlmResponseParser
 {
     static function containsCode(string $response): bool
     {
-        return (bool) preg_match('/^```(.*)```$/s', trim($response));
+        return (bool)preg_match('/^```(.*)```$/s', trim($response));
     }
 
     static function parsePhp(string $response): string
@@ -39,34 +44,41 @@ class LlmResponseParser
         return $raw;
     }
 
-    static function parseJson(string $response): array
+    public static function parseJson(string $response): array
     {
         $raw = trim($response);
 
-        // Suche nach dem ersten JSON-Codeblock
+        // Extrahiere JSON-Codeblock
         if (preg_match('/```json\s*(.*?)\s*```/s', $raw, $matches)) {
             $json = trim($matches[1]);
         } elseif (preg_match('/```(.*?)```/s', $raw, $matches)) {
             $json = trim($matches[1]);
         } else {
-            // Robust: Finde das erste vollständige JSON-Objekt (auch verschachtelt)
             $json = self::extractFirstJsonObject($raw);
         }
 
-        // Entferne alles nach dem letzten schließenden }
+        // Entferne alles nach dem letzten }
         $jsonEnd = strrpos($json, '}');
         if ($jsonEnd !== false) {
             $json = substr($json, 0, $jsonEnd + 1);
         }
 
+        // Escape einzelne Backslashes, die nicht schon doppelt sind
+        $json = preg_replace(
+            '/(?<!\\\\)\\\\(?![\\\\"\/bfnrtu])/', '\\\\', $json
+        );
+
+        // Entferne Steuerzeichen, die JSON stören könnten
+        $json = preg_replace('/[\x00-\x1F\x7F]/u', '', $json);
+
         $data = json_decode($json, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             error_log(
-                "[JSON-ERROR]: JSON=" . $json . ' Error='
-                . json_last_error_msg()
+                "[JSON-ERROR]: JSON=" . $json . ' Error=' . json_last_error_msg(
+                )
             );
-            throw new InvalidArgumentException(
+            throw new \InvalidArgumentException(
                 'Invalid JSON format: ' . json_last_error_msg()
             );
         }
@@ -81,8 +93,8 @@ class LlmResponseParser
             return $text;
         }
         $depth = 0;
-        $end   = $start;
-        $len   = strlen($text);
+        $end = $start;
+        $len = strlen($text);
         for ($i = $start; $i < $len; $i++) {
             if ($text[$i] === '{') {
                 $depth++;

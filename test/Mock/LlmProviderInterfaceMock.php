@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bono\Tests\Mock;
 
-use Bono\Provider\LlmProviderInterface;
+use Bono\Api\LlmProviderInterface;
 
 use function count;
 
@@ -28,8 +28,8 @@ class LlmProviderInterfaceMock implements LlmProviderInterface
         return "Keine weitere Dummy-Antwort.";
     }
 
-    public function generateStreamResult(string $prompt, array $options = []): string
-    {
+    public function generateStreamResult(string $prompt, array $options = []
+    ): string {
         if ($this->index < count($this->script)) {
             return $this->script[$this->index++];
         }

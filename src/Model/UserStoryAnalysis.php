@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bono\Data;
+namespace Bono\Model;
 
 use InvalidArgumentException;
 
@@ -12,14 +12,19 @@ use function is_float;
 use function is_int;
 use function is_string;
 
+/**
+ * Class UserStoryAnalysis
+ * This class represents an analysis of a user story, including its
+ * requirements, entities, actions, complexity, and architecture.
+ */
 class UserStoryAnalysis
 {
     public string $originalStory;
     public string $architecture;
     private array $requirements = [];
-    public array $entities      = [];
-    public array $actions       = [];
-    public string $complexity   = 'unknown';
+    public array $entities = [];
+    public array $actions = [];
+    public string $complexity = 'unknown';
 
     public function __construct(string $story)
     {
@@ -49,7 +54,9 @@ class UserStoryAnalysis
         } elseif (is_string($param)) {
             $this->entities = explode(',', $param);
         } else {
-            throw new InvalidArgumentException('Entities must be an array or a comma-separated string.');
+            throw new InvalidArgumentException(
+                'Entities must be an array or a comma-separated string.'
+            );
         }
     }
 
@@ -63,7 +70,9 @@ class UserStoryAnalysis
         } elseif (is_string($param)) {
             $this->actions = explode(',', $param);
         } else {
-            throw new InvalidArgumentException('Actions must be an array or a comma-separated string.');
+            throw new InvalidArgumentException(
+                'Actions must be an array or a comma-separated string.'
+            );
         }
     }
 
@@ -75,9 +84,11 @@ class UserStoryAnalysis
         if (is_string($param)) {
             $this->complexity = $param;
         } elseif (is_int($param) || is_float($param)) {
-            $this->complexity = (string) $param;
+            $this->complexity = (string)$param;
         } else {
-            throw new InvalidArgumentException('Complexity must be a string, integer, or float.');
+            throw new InvalidArgumentException(
+                'Complexity must be a string, integer, or float.'
+            );
         }
     }
 
@@ -108,4 +119,22 @@ class UserStoryAnalysis
     {
         return $this->complexity;
     }
+
+    public function getOriginalStory()
+    {
+        return $this->originalStory;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'originalStory' => $this->getOriginalStory(),
+            'requirements'  => $this->getRequirements(),
+            'entities'      => $this->getEntities(),
+            'actions'       => $this->getActions(),
+            'complexity'    => $this->getComplexity(),
+            'architecture'  => $this->getArchitecture(),
+        ];
+    }
+
 }

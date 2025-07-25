@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Bono\Tool;
 
-use function base64_decode;
-use function file_get_contents;
-use function file_put_contents;
-use function json_decode;
-use function json_encode;
-use function stream_context_create;
+use Bono\Api\Tool;
+
 use function time;
+use function json_encode;
+use function json_decode;
+use function base64_decode;
+use function file_put_contents;
+use function file_get_contents;
+use function stream_context_create;
 
 class StableDiffusion implements Tool
 {
@@ -38,12 +40,12 @@ class StableDiffusion implements Tool
                 'content' => json_encode($payload),
             ],
         ]);
-        $result  = file_get_contents($this->baseUrl, false, $context);
-        $json    = json_decode($result, true);
+        $result = file_get_contents($this->baseUrl, false, $context);
+        $json = json_decode($result, true);
 
-        if (! empty($json['images'][0])) {
+        if (!empty($json['images'][0])) {
             $imageData = $json['images'][0];
-            $file      = 'output_' . time() . '.png';
+            $file = 'output_' . time() . '.png';
             file_put_contents($file, base64_decode($imageData));
             return "Bild generiert: $file";
         }

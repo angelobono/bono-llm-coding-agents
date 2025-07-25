@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Bono\Tests\Mock;
 
-use Bono\Factory\LoggerFactory;
-use Bono\Tool\Tool;
-use Psr\Log\LoggerAwareInterface;
+use Bono\Api\Tool;
 use Psr\Log\LoggerAwareTrait;
+use Bono\Factory\LoggerFactory;
+use Psr\Log\LoggerAwareInterface;
 
 class StableDiffusionMock implements Tool, LoggerAwareInterface
 {
@@ -15,7 +15,7 @@ class StableDiffusionMock implements Tool, LoggerAwareInterface
 
     public function __construct()
     {
-        if (! $this->logger) {
+        if (!$this->logger) {
             $this->logger = (new LoggerFactory())->__invoke();
         }
     }

@@ -19,7 +19,6 @@ use function array_keys;
 
 /**
  * Multi-Agent Integration Test
- *
  * simuliert die Zusammenarbeit von Architekt- und Coder-Agenten
  * bei der Entwicklung eines Dashboards mit Patientenakte, sowie die Nutzung
  * eines Caching-Mechanismus.
@@ -33,7 +32,8 @@ class OrchestratorIntegrationTest extends TestCase
         $orchestrator = $this->getOrchestrator();
 
         // Task ausführen
-        $result = $orchestrator->processTask(<<<USER_STORY
+        $result = $orchestrator->processTask(
+            <<<USER_STORY
 As a doctor, I want a dashboard with patient records.
             
 Acceptance criteria
@@ -49,14 +49,17 @@ Not acceptance criteria
 - The API does not provide endpoints to export patient data (e.g., no CSV/PDF export).
 - The API does not send notifications for new records.
 - The API does not connect or synchronize with external hospital systems.
-USER_STORY);
+USER_STORY
+        );
 
         // 7) Assertions
         $this->assertTaskResultIsValid($result);
 
         // Optional → Logging ausgeben
         echo "\nAnalyse-Komplexität: " . $result->analysis->complexity;
-        echo "\nGenerierte Dateien: " . implode(', ', array_keys($result->files));
+        echo "\nGenerierte Dateien: " . implode(
+                ', ', array_keys($result->files)
+            );
     }
 
     #[Test]
@@ -72,7 +75,7 @@ USER_STORY);
         $cached = new CachingDecorator($orchestrator, $cache);
 
         // 4) StableDiffusion MOCK registrieren (kein echter API-Call)
-        $cached->registerTool('stable_diffusion', new StableDiffusionMock());
+        // $cached->registerTool('stable_diffusion', new StableDiffusionMock());
 
         // 5) Test-UserStory
         $userStory = 'As a doctor, I want a dashboard with patient records.';
@@ -85,7 +88,9 @@ USER_STORY);
 
         // Optional → Logging ausgeben
         echo "\nAnalyse-Komplexität: " . $result->analysis->complexity;
-        echo "\nGenerierte Dateien: " . implode(', ', array_keys($result->files));
+        echo "\nGenerierte Dateien: " . implode(
+                ', ', array_keys($result->files)
+            );
     }
 
     public function getOrchestrator(): Orchestrator
@@ -95,16 +100,19 @@ USER_STORY);
 
         // 2) Agenten aus Factory
         $architect = (new ArchitectAgentFactory($ollama))->__invoke();
-        $coder = (new CoderAgentFactory($ollama, 'qwen2.5-coder:3b'))->__invoke();
+        $coder = (new CoderAgentFactory($ollama, 'qwen2.5-coder:3b'))->__invoke(
+        );
 
         // 3) Orchestrator bauen
         $orchestrator = new Orchestrator($architect, $coder);
-        $orchestrator->registerTool('stable_diffusion', new StableDiffusionMock());
+        /*$orchestrator->registerTool(
+            'stable_diffusion', new StableDiffusionMock()
+        );*/
         return $orchestrator;
     }
 
-    public function assertTaskResultIsValid(\Bono\Data\TaskResult $result): void
-    {
+    public function assertTaskResultIsValid(\Bono\Model\CodingTask $result
+    ): void {
         $this->assertTrue($result->success, 'Task sollte erfolgreich sein');
         $this->assertNotEmpty(
             $result->files, 'Es sollte mindestens eine Datei geben'

@@ -27,7 +27,9 @@ class Env
         } catch (\Exception $e) {
             // Handle the case where the .env file is not found or cannot be loaded
             // You might want to log this or throw an exception
-            error_log('Could not load .env file: ' . $e->getMessage());
+            error_log(
+                'Could not load .env file, using default settings as fallback!'
+            );
         }
         Env::$initialized = true;
     }

@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Bono\Agent;
 
 use Exception;
-use Bono\Data\UserStoryAnalysis;
-use Bono\Factory\LoggerFactory;
-use Bono\Parser\LlmResponseParser;
-use Bono\Provider\LlmProviderInterface;
-use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Bono\Factory\LoggerFactory;
+use Bono\Model\UserStoryAnalysis;
+use Psr\Log\LoggerAwareInterface;
+use Bono\Parser\LlmResponseParser;
+use Bono\Api\LlmProviderInterface;
 
-use function array_map;
 use function in_array;
 use function is_array;
+use function array_map;
 use function is_string;
 use function json_encode;
 
@@ -99,6 +99,8 @@ needed to cover the user story.
 - Only create files that are necessary to implement the user story.
 - Only create REST APIs that are necessary to implement the user story
 - No templates, no boilerplate code or html rendering.
+- Gib das Ergebnis als gültigen JSON-String zurück. Verwende keine escaped 
+Slashes, sondern gebe Pfade und Namespaces mit einfachen / bzw. \ aus (wie bei json_encode(..., JSON_UNESCAPED_SLASHES) in PHP).
 PROMPT;
 
         $response = $this->provider->generateStreamResult($prompt, [
@@ -183,10 +185,15 @@ PROMPT;
     public function createImplementationPlan(UserStoryAnalysis $analysis): array
     {
         $requirements = json_encode(
-            $analysis->getRequirements(), JSON_PRETTY_PRINT
+            $analysis->getRequirements(),
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
         );
-        $entities = json_encode($analysis->getEntities(), JSON_PRETTY_PRINT);
-        $actions = json_encode($analysis->getActions(), JSON_PRETTY_PRINT);
+        $entities = json_encode(
+            $analysis->getEntities(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+        );
+        $actions = json_encode(
+            $analysis->getActions(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+        );
 
         $prompt = <<<PROMPT
 Du bist ein Software-Architekt.
@@ -214,6 +221,8 @@ Important rules:
 - Use basic data models and with relevant properties and refences that are 
 needed to cover the user story.
 - Only create REST APIs, no templates, no boilerplate code or html rendering.
+- Gib das Ergebnis als gültigen JSON-String zurück. Verwende keine escaped 
+Slashes, sondern gebe Pfade und Namespaces mit einfachen / bzw. \ aus (wie bei json_encode(..., JSON_UNESCAPED_SLASHES) in PHP). 
 PROMPT;
 
         $response = $this->provider->generateStreamResult($prompt, [
@@ -281,6 +290,8 @@ Wichtige Regeln:
 needed to cover the user story.
 - Only create files that are necessary to implement the user story.
 - Only create REST APIs, no templates, no boilerplate code or html rendering.
+- Gib das Ergebnis als gültigen JSON-String zurück. Verwende keine escaped 
+Slashes, sondern gebe Pfade und Namespaces mit einfachen / bzw. \ aus (wie bei json_encode(..., JSON_UNESCAPED_SLASHES) in PHP).
 PROMPT;
 
         $response = $this->provider->generateStreamResult($prompt, [
@@ -289,50 +300,5 @@ PROMPT;
         ]);
         $this->logger->info("[Architekt-Feedback]: " . $response);
         return LlmResponseParser::parseJson($response);
-    }
-
-    public function analyseFiles(
-        array $fileContents,
-        ?UserStoryAnalysis $analysis
-    ) {
-        $json = json_encode($fileContents, JSON_PRETTY_PRINT);
-        $prompt = <<<PROMPT
-Du bist ein Software-Architekt. Analysiere den Code und liefere eine detaillierte Analyse der Architektur, der verwendeten Patterns und der Komplexität.
-Analysiere die folgenden Dateien und liefere eine detaillierte Analyse der Architektur, der verwendeten Patterns und der Komplexität.
-
-Dateien:
-{$json}
-
-Antworte im JSON-Format:
-{
-  "architecture": "a comma seperated list of architectural styles, e.g. microservices, monolith, serverless, ddd, hexagonal, layered, technical, event-driven, cqrs, clean, modular, etc.",
-  "complexity": "low|medium|high",
-  "patterns": ["pattern1", "pattern2", ...],
-  "details": "any additional details about the architecture"
-}
-PROMPT;
-
-        $response = $this->provider->generateStreamResult($prompt, [
-            'model'       => $this->planningModel,
-            'temperature' => 0.1,
-        ]);
-
-        $this->logger->info("[Architekt-Datei-Analyse]: " . $response);
-
-        $decoded = LlmResponseParser::parseJson($response);
-
-        if (isset($decoded['architecture'])) {
-            $analysis->setArchitecture($decoded['architecture']);
-        }
-        if (isset($decoded['complexity'])
-            && in_array(
-                $decoded['complexity'], ['low', 'medium', 'high']
-            )
-        ) {
-            $analysis->setComplexity($decoded['complexity']);
-        } else {
-            $analysis->setComplexity('unknown');
-        }
-        return $decoded;
     }
 }

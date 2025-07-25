@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Bono\Agent;
 
 use Exception;
-use Bono\Data\TaskResult;
+use Bono\Model\CodingTask;
 use Bono\Code\FileGenerator;
 use Psr\Log\LoggerAwareTrait;
+use Bono\Factory\LoggerFactory;
 use Psr\Log\LoggerAwareInterface;
 use Bono\Code\ComposerJsonGenerator;
 
@@ -32,28 +33,33 @@ class Orchestrator implements LoggerAwareInterface
         ?FileGenerator $fileGenerator = null,
         ?ComposerJsonGenerator $composerJsonGenerator = null
     ) {
+        if (!$this->logger) {
+            $this->logger = (new LoggerFactory(self::class))();
+        }
         $this->coder = $coder;
         $this->architekt = $architekt;
-        $this->fileGenerator = $fileGenerator
-            ?? new FileGenerator(
-                method_exists($this->logger, 'withName')
-                    ? $this->logger->withName(FileGenerator::class)
-                    : $this->logger
-            );
+        $this->fileGenerator = $fileGenerator ?? new FileGenerator();
         $this->composerJsonGenerator = $composerJsonGenerator
-            ?? new ComposerJsonGenerator(
-                method_exists($this->logger, 'withName')
-                    ? $this->logger->withName(ComposerJsonGenerator::class)
-                    : $this->logger
-            );
+            ?? new ComposerJsonGenerator();
+
+        $this->fileGenerator->setLogger(
+            method_exists($this->logger, 'withName')
+                ? $this->logger->withName(FileGenerator::class)
+                : $this->logger
+        );
+        $this->composerJsonGenerator->setLogger(
+            method_exists($this->logger, 'withName')
+                ? $this->logger->withName(ComposerJsonGenerator::class)
+                : $this->logger
+        );
     }
 
     /**
      * @throws Exception
      */
-    public function processTask(string $userStory): TaskResult
+    public function processTask(string $userStory): CodingTask
     {
-        $result = new TaskResult($userStory);
+        $result = new CodingTask($userStory);
         $result->analysis = $this->architekt->analyseUserStory($userStory);
         $plan = $this->architekt->createImplementationPlan($result->analysis);
         $result->files = $this->fileGenerator->generateFilesParallel(

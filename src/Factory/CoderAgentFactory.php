@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bono\Factory;
 
 use Bono\Agent\CoderAgent;
-use Bono\Provider\LlmProviderInterface;
+use Bono\Api\LlmProviderInterface;
 
 /**
  * Factory for creating instances of CoderAgent.

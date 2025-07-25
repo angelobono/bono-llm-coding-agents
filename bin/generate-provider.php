@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-use Bono\Provider\LlmProviderInterface;
+use Bono\Agent\Orchestrator;
+use Bono\Api\LlmProviderInterface;
 
 require_once __DIR__ . '/../bootstrap.php';
 
 $app = require __DIR__ . '/../config/app.php';
+$app->setLogger((new Bono\Factory\LoggerFactory(Orchestrator::class))());
 
 $interface = LlmProviderInterface::class;
 
@@ -45,6 +47,12 @@ Interface:
 
 Methods: 
 {$methods}
+
+Acceptance criteria: 
+- Only the provider class should be generated, nothing else.
+
+Non-acceptance criteria:
+- No apis should be generated.
 
 USER_STORY
 );

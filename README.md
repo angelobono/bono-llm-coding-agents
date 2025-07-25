@@ -1,9 +1,14 @@
 # LLM Coding Agents and Orchestration for PHP
 
-Automated multi-agent architecture for code generation, analysis, and orchestration.
-It can support various AI providers with custom implementation, the default is using an
-OllamaProvider.
+Generateive AI with automated multi-agent architecture for PHP code generation,
+analysis, and agent orchestration. It can support various AI providers with custom
+implementation, the default is using an OllamaProvider, so it can be used
+completely local and open source, too.
+
 This project is in an experimental state, but already usable.
+
+It is a simple implementation but customizable, extandable and powerful tool to
+generate PHP code from user stories.
 
 Find more details in the [HTML-documentation](https://angelobono.github.io/bono-llm-coding-agents/).
 
@@ -18,6 +23,9 @@ Find more details in the [HTML-documentation](https://angelobono.github.io/bono-
 - Generated files will be linted
 - Generates generic type annotations for PHP 8\.1\+
 - Parallel task processing with `swoole` / `openswoole` extension
+- Retry mechanisms
+- Supports simple user stories
+- Supports user stories with acceptance criteria and non-acceptance criteria
 
 ## Installation
 
@@ -35,6 +43,8 @@ Note: The default prompts are configured to generate REST-APIs.
 <?php
 
 declare(strict_types=1);
+
+require_once __DIR__ . '/../bootstrap.php';
 
 $app = require 'config/app.php';
 $app->processTask('As a doctor, I want a dashboard with patient records.');
@@ -67,6 +77,8 @@ Generated files:
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../bootstrap.php';
+
 $app = require 'config/app.php';
 $app->processTask(<<<USER_STORY
 As a doctor, I want a dashboard with patient records.
@@ -78,7 +90,7 @@ Acceptance criteria
 - Access to all patient endpoints requires authentication (e.g., JWT token).
 - The API responses are structured in JSON and support clients on desktop and tablet.
 
-Not acceptance criteria
+Non-acceptance criteria
 - The API does not provide endpoints to edit or delete patient records (PUT, DELETE are not available).
 - The API does not provide endpoints for analytics or statistics.
 - The API does not provide endpoints to export patient data (e.g., no CSV/PDF export).

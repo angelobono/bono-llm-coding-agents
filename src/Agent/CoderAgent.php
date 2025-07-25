@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Bono\Agent;
 
-use Bono\Factory\LoggerFactory;
-use Bono\Provider\LlmProviderInterface;
-use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Bono\Factory\LoggerFactory;
+use Psr\Log\LoggerAwareInterface;
+use Bono\Api\LlmProviderInterface;
 
 use function trim;
 

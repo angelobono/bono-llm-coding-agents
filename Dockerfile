@@ -8,10 +8,6 @@ RUN apt-get update && \
 # PHP-Erweiterungen installieren
 RUN docker-php-ext-install curl json
 
-# OpenSwoole installieren
-RUN pecl install openswoole && \
-    docker-php-ext-enable swoole
-
 WORKDIR /app
 COPY . /app
 

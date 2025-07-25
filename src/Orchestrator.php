@@ -320,8 +320,7 @@ class Orchestrator implements LoggerAwareInterface
 
         return <<<PROMPT
 Du bist ein PHP-Coder. Du verwendest Standards wie PSR und ITEM-drafts und Best
-Practices. Du verwendest keine schließenden PHP-Tags (?>). Deine bevorzugten
-Libraries/PHP-Extensions sind Mezzio, Laminas, Doctrine, Monolog und Swoole.
+Practices. Deine bevorzugtenLibraries/PHP-Extensions sind Mezzio, Laminas, Doctrine and Monolog.
 Hier ist das Projekt in kompakter Form:
 
 Requirements: {$requirements}
@@ -333,6 +332,9 @@ Architektur: {$analysis->getArchitecture()}
 Deine Aufgabe: Generiere NUR die Datei **{$fileName}**.
 WICHTIG:
 - Gib nur den reinen PHP-Code zurück
+- Maximale Zeilenlänge: 80 Zeichen
+- Verwende PHP 8.2+ Features, wo sinnvoll
+- Dont use closing PHP-Tags \?>
 - Keine Erklärungen, keine zusätzlichen Texte
 - Fertig = wenn du diese eine Datei abgeschlossen hast
 - Verwende PHP Generics (@template T), wo sinnvoll
@@ -352,15 +354,17 @@ PROMPT;
         }
         $useStatements = $this->getUseStatementsFromAnalysis($result->files);
         $prompt        = <<<PROMPT
-Du bist ein PHP-Coder. Erzeuge eine composer.json für das Projekt:
+Erzeuge eine gültige `composer.json` für ein PHP-Projekt.  
+Nutze die folgende Vorlage und ergänze die notwendigen Pakete unter `"require"` basierend auf diesen verwendeten `use`-Statements:  
+{$useStatements}
 
-Verwende diese Vorlage und füge die "require" hinzu:
+```json
 {
     "name": "angelobono/bono-generated",
     "description": "Ein Projekt generiert von angelobono/bono",
-    "type": "project",
+    "type": "library",
     "require": {
-        "php": "^8.0",
+        "php": "^8.2",
         "ext-json": "*"
     },
     "autoload": {
@@ -375,8 +379,9 @@ Verwende diese Vorlage und füge die "require" hinzu:
         "vimeo/psalm": "^5.0"
     }
 }
+```
 
-Es werden folgenden use-Statements im Code verwenden: {$useStatements}
+Gib ausschließlich die fertige `composer.json` zurück. Keine Erklärungen, keine Kommentare.
 
 PROMPT;
         $response      = $this->coder->generateCode($prompt, true);

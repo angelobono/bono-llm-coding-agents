@@ -8,8 +8,8 @@ theme:
   name: material
   palette:
     - scheme: default
-      primary: light green
-      accent: teal
+      primary: green
+      accent: lime
       toggle:
         icon: material/weather-sunny
         name: Helles Design

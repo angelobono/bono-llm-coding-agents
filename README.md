@@ -29,7 +29,7 @@ Find more details in the [HTML-documentation](https://angelobono.github.io/bono-
 
 ## Installation
 
-You need am AI Provider to run this project, the default is Ollama.
+You need one or nore LLM Providers to run this project, Ollama is default.
 You can find more information about Ollama [here](https://ollama.com/)
 or in the [HTML-documentation](https://angelobono.github.io/bono-llm-coding-agents/).
 

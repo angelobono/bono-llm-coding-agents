@@ -9,7 +9,7 @@ Requirements:
 **Step 1:** Clone the repository
 ```bash
 git clone https://github.com/angelobono/bono-llm-coding-agents.git
-cd bono-llm
+cd bono-llm-coding-agents
 ```
 
 **Step 2:** Install Ollama (see Ollama website or use a docker image)

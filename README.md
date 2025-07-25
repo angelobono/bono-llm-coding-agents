@@ -1,6 +1,5 @@
-# Bono LLM Coding Agents and Orchestration for PHP
-
-**PHP LLM Coding Agents**  
+# LLM Coding Agents and Orchestration for PHP
+  
 Automated multi-agent architecture for code generation, analysis, and orchestration.
 It can support various AI providers with custom implementation, the default is using an OllamaProvider. 
 This project is in an experimental state, but already usable.
@@ -28,7 +27,7 @@ Requirements:
 **Step 1:** Clone the repository
 ```bash
 git clone https://github.com/angelobono/bono-llm-coding-agents.git
-cd bono-llm
+cd bono-llm-coding-agents
 ```
 
 **Step 2:** Install Ollama (see Ollama website or use a docker image)

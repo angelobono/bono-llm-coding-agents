@@ -1,16 +1,15 @@
-name: Deploy MkDocs
+name: Deploy MkDocs site
 
 on:
   push:
     branches:
-      - main
+      - main  # deploy when pushing to main
 
 jobs:
-  deploy:
+  build-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -18,10 +17,10 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install dependencies
-        run: pip install mkdocs mkdocs-material
+      - name: Install MkDocs
+        run: |
+          pip install mkdocs mkdocs-material
 
       - name: Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdocs gh-deploy --force

@@ -3,6 +3,7 @@
     "description": "Bono Llm Coding Agents and Orchestration for PHP",
     "type": "project",
     "license": "BSD-3-Clause",
+    "homepage": "https://angelobono.github.io/bono-llm-coding-agents/",
     "version": "1.0.0",
     "tags": [
         "php",

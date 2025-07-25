@@ -3,7 +3,10 @@ name: Deploy MkDocs site
 on:
   push:
     branches:
-      - main  # deploy when pushing to main
+      - main
+
+permissions:
+  contents: write   # ✅ allows push to gh-pages
 
 jobs:
   build-deploy:
@@ -12,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
@@ -21,6 +24,8 @@ jobs:
         run: |
           pip install mkdocs mkdocs-material
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # ✅ pass the token
         run: |
           mkdocs gh-deploy --force

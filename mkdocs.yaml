@@ -1,9 +1,8 @@
-site_name: Bono LLM Coding Agents
+site_name: Bono LLM Coding Agents Docs
 site_description: Dokumentation für das PHP LLM Coding Agents Projekt
 site_author: Angelo Bono
 repo_url: https://github.com/angelobono/bono-llm
 docs_dir: docs/book
-site_dir: docs/html
 theme:
   name: material
   palette:

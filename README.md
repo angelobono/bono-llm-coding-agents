@@ -15,45 +15,9 @@ Find more details in the [HTML-documentation](https://angelobono.github.io/bono-
 - Integration and unit tests
 - Compatible with PHP 8\.2\+
 - Generated files will be linted
+- Generates generic type annotations for PHP 8\.1\+
 
-## Installation
-
-Requirements:
-
-- PHP >= 8\.2
-- Composer
-- Optional: Ollama
-
-**Step 1:** Clone the repository
-```bash
-git clone https://github.com/angelobono/bono-llm-coding-agents.git
-cd bono-llm-coding-agents
-```
-
-**Step 2:** Install Ollama (see Ollama website or use a docker image)
-
-**Step 3:** Download models, the default setup uses:
-```bash
-ollama pull llama3.2:3b
-ollama pull qwen2.5-coder:3b
-```
-
-**Step 3:** Install dependencies
-```bash
-composer install
-```
-
-## Directory Structure
-
-- `src/` – Main source code (Agents, Provider, Cache, Parser, Tools)
-- `test/` – Unit and integration tests
-- `generated/` – Generated example code
-- `config/` – Configuration files
-- `docs/` – Documentation
-
-## Usage
-
-Example using the Ollama LLM provider:
+## Quick example
 
 ```php
 <?php
@@ -86,29 +50,9 @@ $userStory = 'As a doctor, I want a dashboard with patient records.';
 
 // 6) Execute task
 $result = $orchestrator->processTask($userStory);
-
-// Optional → Output logging
-echo '\nAnalysis complexity: ' . $result->analysis->complexity;
-echo '\nGenerated files: ' . implode(', ', array_keys($result->files));
 ```
 
-Generated log:
-
-```php
-[2025-07-25T11:45:00.760476+00:00] Bono\Orchestrator.INFO: Tool registriert {"tool":"stable_diffusion"} []
-[2025-07-25T11:45:00.761640+00:00] Bono\Orchestrator.INFO: === ANALYSE-PHASE === [] []
-[2025-07-25T11:47:10.640634+00:00] Bono\Orchestrator.INFO: === PLANUNGSPHASE === [] []
-[2025-07-25T11:48:19.429492+00:00] Bono\Orchestrator.INFO: Planung abgeschlossen {"success":true,"files_count":6} []
-[2025-07-25T11:48:19.429952+00:00] Bono\Orchestrator.INFO: === CODE-GENERIERUNG für Datei: Patient.php === [] []
-[2025-07-25T11:48:54.634921+00:00] Bono\Orchestrator.INFO: === CODE-GENERIERUNG für Datei: PatientRecord.php === [] []
-[2025-07-25T11:49:14.434354+00:00] Bono\Orchestrator.INFO: === CODE-GENERIERUNG für Datei: DashboardController.php === [] []
-[2025-07-25T11:49:39.028143+00:00] Bono\Orchestrator.INFO: === CODE-GENERIERUNG für Datei: DashboardView.php === [] []
-[2025-07-25T11:50:16.103784+00:00] Bono\Orchestrator.INFO: === CODE-GENERIERUNG für Datei: AuthService.php === [] []
-[2025-07-25T11:50:34.001709+00:00] Bono\Orchestrator.INFO: === CODE-GENERIERUNG für Datei: DatabaseConnection.php === [] []
-[2025-07-25T11:50:54.951131+00:00] Bono\Orchestrator.INFO: === CODE-GENERIERUNG für Datei: composer.json === [] []
-```
-
-Generated file structure:
+Generated files:
 
 ```php
 📂 d7b5e56758d02ddde13307b955372e66/
@@ -126,50 +70,6 @@ Generated file structure:
                 📄 AuthService.php
             🖼️ View/
                 📄 DashboardView.php
-```
-
-Generated composer file:
-
-```json
-{
-    "name": "angelobono/bono-generated",
-    "description": "Ein Projekt generiert von angelobono/bono",
-    "type": "library",
-    "require": {
-        "php": "^8.2",
-        "ext-json": "*",
-        "symfony/uid": "^7.0",
-        "doctrine/orm": "^3.0",
-        "monolog/monolog": "^3.0",
-        "zendframework/zend-diactoros": "^2.5",
-        "psr/http-message": "^1.1"
-    },
-    "autoload": {
-        "psr-4": {
-            "App\\": "src/"
-        }
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^10.0",
-        "phpstan/phpstan": "^1.10",
-        "squizlabs/php_codesniffer": "^3.7",
-        "vimeo/psalm": "^5.0"
-    }
-}
-```
-
-## Tests
-
-Run unit and integration tests:
-
-```bash
-composer test
-```
-
-Test coverage:
-
-```bash
-composer test-coverage
 ```
 
 ## Known Issues

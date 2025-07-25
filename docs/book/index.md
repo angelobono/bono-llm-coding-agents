@@ -14,3 +14,4 @@ This project is in an experimental state, but already usable.
 - Integration and unit tests
 - Compatible with PHP 8\.2\+
 - Generated files will be linted
+- Generates generic type annotations for PHP 8\.1\+

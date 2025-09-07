@@ -1,6 +1,6 @@
 # LLM Coding Agents and Orchestration for PHP
 
-Generateive AI with automated multi-agent architecture for PHP code generation,
+Generative AI with automated multi-agent architecture for PHP code generation,
 analysis, and agent orchestration. It can support various AI providers with custom
 implementation, the default is using an OllamaProvider, so it can be used
 completely local and open source, too.

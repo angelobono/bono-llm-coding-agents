@@ -101,7 +101,7 @@ USER_STORY);
 
 ## Known Issues
 
-- Ollama sometimes returns empty responses, which can lead to errors in the agent workflow. The
+- Ollama sometimes returns empty or invalid json responses, which can lead to errors in the agent workflow. The
   workflow will retry automatically, but this can cause longer execution times.
 
 ## Contributing
